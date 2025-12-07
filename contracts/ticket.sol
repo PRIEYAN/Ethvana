@@ -1,45 +1,35 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Ticket{
+contract TicketSystem {
 
-    struct eventDetails{
-        string eventName;
-        string eventDate;
-        string otherDetails;
-    }
-    struct organiser{
-        address organiserId;
-        string organiserName;
-        string[] prviousEvents;
-    }
-    struct schedule{
-        uint256 allowed;
-        string shortListDate;
-    }
-    struct payment{
-        uint256 amount;
-        address[] paid;
-    }
-    struct ticket {
-        string ticketId;
-        eventDetails EventDetails;
-        organiser Organiser;
-        bool scheduleBooking; // default false
-        schedule Schedule;
-        uint256 maxBooking;
-        //mapping(address => string) bookedBy;
-        payment Payment;
+    uint256 public nextTicketId = 1;
+
+    struct Ticket {
+        uint256 ticketId;      
+        string ticketCid;    
+        address organiser;     
     }
 
+    mapping(uint256 => Ticket) public tickets;
 
-    struct AttendedHistory{
-        uint256[] attended;
-        uint256[] notAttended;
+    event TicketCreated(
+        uint256 indexed ticketId,
+        string metadataCid,
+        address indexed organiser
+    );
+
+    function createTicket(string memory _cid) external {
+        require(bytes(_cid).length > 0, "CID cannot be empty");
+
+        uint256 id = nextTicketId++;
+
+        tickets[id] = Ticket({
+            ticketId: id,
+            ticketCid: _cid,
+            organiser: msg.sender
+        });
+
+        emit TicketCreated(id, _cid, msg.sender);
     }
-    struct user {
-        address userId;
-        AttendedHistory ethvanaEvent;
-    }
-
-
 }
