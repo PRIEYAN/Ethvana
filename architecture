@@ -1,0 +1,34 @@
+Ticket
+  
+  -ticketId - string
+  -event - map{
+    -eventName - string
+    -eventDate - string
+    -otherDetails - string
+  }
+  -organiser - map {
+    -organiserId - address ,
+    -organiserName - string ,
+    -previousEvents - array
+  }
+  -scheduleBooking - Boolean (default:false)
+  -schedule - map {
+    -allowed - uint256
+    -shortListDate - string
+    -allotedTo - map
+  }
+  -maxBooking - uint256
+  -BookedBy - map {
+    -userId - address : date - string
+  }
+  -payment - map {
+    -amount - uint256,
+    -paid - array { address,.. }
+  }
+  
+Users - 
+  -userId - address
+  -ethvanaEvent - map {
+    -attended - array {},
+    -notAttended - array {},
+  }
