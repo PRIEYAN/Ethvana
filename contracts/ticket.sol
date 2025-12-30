@@ -1,35 +1,66 @@
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract TicketSystem {
-
-    uint256 public nextTicketId = 1;
-
-    struct Ticket {
-        uint256 ticketId;      
-        string ticketCid;    
-        address organiser;     
+contract Ticket {
+/**
+ * @dev Creates a new ticket.
+ * @param ticketCid The content identifier for the ticket.
+ * @param owner The address of the ticket owner.
+ * @return The unique identifier for the created ticket.
+ */
+    struct TicketInfo{
+        string ticketCid;
+        address owner;
+        uint256 createdAt;
+        bool isActive;
     }
 
-    mapping(uint256 => Ticket) public tickets;
+    mapping(bytes32 => TicketInfo) public tickets;
 
-    event TicketCreated(
-        uint256 indexed ticketId,
-        string metadataCid,
-        address indexed organiser
-    );
+    function createTicket(string memory ticketCid,address owner) public returns (bytes32){
+        bytes32 ticketId = keccak256(
+            abi.encodePacked(ticketCid, owner, block.timestamp)
+        );
+        tickets[ticketId] = TicketInfo({
+            ticketCid: ticketCid,
+            owner: owner,
+            createdAt: block.timestamp,
+            isActive: true
+        });
+        return ticketId;
+    }
 
-    function createTicket(string memory _cid) external {
-        require(bytes(_cid).length > 0, "CID cannot be empty");
 
-        uint256 id = nextTicketId++;
+/**
+ * @dev Books a ticket for a user.
+ * @param users The address of the user booking the ticket.
+ * @param ticketId The unique identifier of the ticket to be booked.
+ * @return The booking information for the ticket.
+ */
 
-        tickets[id] = Ticket({
-            ticketId: id,
-            ticketCid: _cid,
-            organiser: msg.sender
+    struct Booking{
+        address user;
+        bytes32 ticketId;
+        uint256 bookedAt;
+    }
+
+    // map address -> Booking to track per-user booking
+    mapping(address => Booking) public bookings;
+    uint256 public bookingCount = 0;
+
+    function bookTicket(bytes32 ticketId) public returns (Booking memory) {
+        require(tickets[ticketId].isActive, "Ticket does not exist");
+        require(bookings[msg.sender].bookedAt == 0, "Already booked");
+
+        bookings[msg.sender] = Booking({
+            user: msg.sender,
+            ticketId: ticketId,
+            bookedAt: block.timestamp
         });
 
-        emit TicketCreated(id, _cid, msg.sender);
+        bookingCount += 1;
+
+        return bookings[msg.sender];
     }
+
 }
+
