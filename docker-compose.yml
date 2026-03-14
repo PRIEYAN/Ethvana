@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  blockchain:
+    build:
+      context: ./blockchain
+      dockerfile: Dockerfile
+    container_name: ethvana-blockchain
+    ports:
+      - "8545:8545"
+    networks:
+      - ethvana-network
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8545"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ethvana-backend
+    ports:
+      - "8000:8000"
+    networks:
+      - ethvana-network
+    depends_on:
+      blockchain:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - BLOCKCHAIN_RPC_URL=http://blockchain:8545
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ethvana-frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - ethvana-network
+    depends_on:
+      - backend
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+
+networks:
+  ethvana-network:
+    driver: bridge
